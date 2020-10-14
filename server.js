@@ -23,39 +23,47 @@ app.get("/api/hello", function (req, res) {
   res.json({greeting: 'hello API'});
 });
 
-const isNotDateString = (date) => {
-  const time = date.getTime();
+const isInvalidDateString = (string) => {
+  const time = string.getTime();
   return Number.isNaN(time);
 };
 
-const isUnixDate = (date) => {
-  const isInteger = Number.isInteger(date);
-  const utcString = date.toUTCString();
+const isInt = (param) => parseInt(param);
 
-  return isInteger && utcString;
-};
+const getCurrentDate = () => new Date();
 
-const getDate = (param) => {
-  if (!param) return new Date();
-  
-  return new Date(param);
-}
+const getDateFromString = (string) =>  new Date(string);
 
 app.get("/api/timestamp/:date_string?", (req, res) => {
-  const dateString = req.params.date_string;
-  const date = getDate(dateString);
+  const dateParam = req.params.date_string;
+  //const date = getDate(dateString);
+  let date;
   let response = {};
+  const paramType = typeof dateParam;
+  response.type = paramType;
 
-  if (isNotDateString(date)) {
-    response.error = 'Invalid date';
-  } else {
-    response.unix = date.getTime();
-    response.utc = date.toUTCString();
+  if (dateParam === undefined) {
+    date = getCurrentDate();
+    response.date = date;
+  } else if (paramType === 'string') {
+    response.int = dateParam;
+    //date = getDateFromString(dateParam);
   }
+  // if (isNotDateString(date)) {
+  //   const number = parseInt(dateString);
+  //   if (!Number.isNaN(number)) {
+  //     response.unix = number;
+  //   } else {
+  //     response.error = 'Invalid date';
+  //   }
+  // } else {
+  //   response.unix = date.getTime();
+  //   response.utc = date.toUTCString();
+  // }
   res.json(response);
 });
 
 // listen for requests :)
-var listener = app.listen(process.env.PORT, function () {
+var listener = app.listen(process.env.PORT || 3000, function () {
   console.log('Your app is listening on port ' + listener.address().port);
 });

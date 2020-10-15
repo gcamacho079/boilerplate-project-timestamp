@@ -24,8 +24,7 @@ app.get("/api/hello", function (req, res) {
   res.json({greeting: 'hello API'});
 });
 
-const isInvalidDateString = (string) => {
-  const date = new Date(string);
+const isInvalidDate = (date) => {
   const time = date.getTime();
   return Number.isNaN(time);
 };
@@ -43,20 +42,17 @@ const getCurrentDate = () => {
   return response;
 }
 
-const getDateFromInt = (int) => {
-  const response = {};
-  const number = parseInt(int);
-  const date = new Date(number);
-  response.unix = number;
-  response.utc = date.toUTCString();
-  return response;
-};
-
 const getDateFromString = (string) =>  {
   const response = {};
-  const date = new Date(string);
+  let argument = string;
 
-  if (isInvalidDateString(string)) {
+  if (isNumberString(string)) {
+    argument = parseInt(string); 
+  }
+
+  const date = new Date(argument);
+
+  if (isInvalidDate(date)) {
     response.error = 'Invalid date';
   } else {
     response.unix = date.getTime();
@@ -72,8 +68,6 @@ app.get("/api/timestamp/:date_string?", (req, res) => {
 
   if (dateParam === undefined) {
     response = getCurrentDate();
-  } else if (isNumberString(dateParam)) {
-    response = getDateFromInt(dateParam);
   } else {
     response = getDateFromString(dateParam);
   }

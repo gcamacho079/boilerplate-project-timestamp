@@ -8,6 +8,7 @@ var app = express();
 // enable CORS (https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)
 // so that your API is remotely testable by FCC 
 var cors = require('cors');
+const { response } = require('express');
 app.use(cors({optionsSuccessStatus: 200}));  // some legacy browsers choke on 204
 
 // http://expressjs.com/en/starter/static-files.html
@@ -24,42 +25,58 @@ app.get("/api/hello", function (req, res) {
 });
 
 const isInvalidDateString = (string) => {
-  const time = string.getTime();
+  const date = new Date(string);
+  const time = date.getTime();
   return Number.isNaN(time);
 };
 
-const isInt = (param) => parseInt(param);
+const isNumberString = (string) => {
+  const regex = /^\d+$/;
+  return regex.test(string);
+};
 
-const getCurrentDate = () => new Date();
+const getCurrentDate = () => {
+  const response = {};
+  const date = new Date();
+  response.unix = date.getTime();
+  response.utc = date.toUTCString();
+  return response;
+}
 
-const getDateFromString = (string) =>  new Date(string);
+const getDateFromInt = (int) => {
+  const response = {};
+  const number = parseInt(int);
+  const date = new Date(number);
+  response.unix = number;
+  response.utc = date.toUTCString();
+  return response;
+};
+
+const getDateFromString = (string) =>  {
+  const response = {};
+  const date = new Date(string);
+
+  if (isInvalidDateString(string)) {
+    response.error = 'Invalid date';
+  } else {
+    response.unix = date.getTime();
+    response.utc = date.toUTCString();
+  }
+
+  return response;
+};
 
 app.get("/api/timestamp/:date_string?", (req, res) => {
+  let response;
   const dateParam = req.params.date_string;
-  //const date = getDate(dateString);
-  let date;
-  let response = {};
-  const paramType = typeof dateParam;
-  response.type = paramType;
 
   if (dateParam === undefined) {
-    date = getCurrentDate();
-    response.date = date;
-  } else if (paramType === 'string') {
-    response.int = dateParam;
-    //date = getDateFromString(dateParam);
+    response = getCurrentDate();
+  } else if (isNumberString(dateParam)) {
+    response = getDateFromInt(dateParam);
+  } else {
+    response = getDateFromString(dateParam);
   }
-  // if (isNotDateString(date)) {
-  //   const number = parseInt(dateString);
-  //   if (!Number.isNaN(number)) {
-  //     response.unix = number;
-  //   } else {
-  //     response.error = 'Invalid date';
-  //   }
-  // } else {
-  //   response.unix = date.getTime();
-  //   response.utc = date.toUTCString();
-  // }
   res.json(response);
 });
 
